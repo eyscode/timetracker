@@ -1,0 +1,9 @@
+[credentials]
+username = 'Homer.Simpson'
+password = 'do.it.for.her'
+
+[options]
+project = 'Springfield Nuclear Power Plant'
+assignment = 'Nuclear Safety Inspection'
+focal = 'Mr. Burns'
+hours = 6
