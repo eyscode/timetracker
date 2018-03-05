@@ -97,7 +97,7 @@ def load_tt(text, config, date):
     res = session.post(base_url, data=login_args)
 
     if not (res.history and res.history[
-        0].status_code == 302 and res.status_code == 200 and res.url == 'http://timetracker.bairesdev.com/ListaTimeTracker.aspx'):
+            0].status_code == 302 and res.status_code == 200 and res.url == 'http://timetracker.bairesdev.com/ListaTimeTracker.aspx'):
         print("There was a problem login with your credentials. Please check them in the config file and try again.", file=sys.stderr)
         return
 
@@ -108,7 +108,7 @@ def load_tt(text, config, date):
 
     projects_available = {
         opt.text: opt.get('value') for opt in load_time_page.find(
-        'select', {'id': 'ctl00_ContentPlaceHolder_idProyectoDropDownList'}).findAll('option') if opt.text
+            'select', {'id': 'ctl00_ContentPlaceHolder_idProyectoDropDownList'}).findAll('option') if opt.text
     }
 
     if not projects_available.get(options.get('project')):
@@ -139,12 +139,12 @@ def load_tt(text, config, date):
 
     assigments_available = {
         opt.text: opt.get('value') for opt in load_assigments_page.find(
-        'select', {'id': 'ctl00_ContentPlaceHolder_idTipoAsignacionDropDownList'}).findAll('option') if opt.text
+            'select', {'id': 'ctl00_ContentPlaceHolder_idTipoAsignacionDropDownList'}).findAll('option') if opt.text
     }
 
     focals_available = {
         opt.text: opt.get('value') for opt in load_assigments_page.find(
-        'select', {'id': 'ctl00_ContentPlaceHolder_idFocalPointClientDropDownList'}).findAll('option') if opt.text
+            'select', {'id': 'ctl00_ContentPlaceHolder_idFocalPointClientDropDownList'}).findAll('option') if opt.text
     }
 
     if not assigments_available.get(options.get('assignment')):
@@ -157,17 +157,17 @@ def load_tt(text, config, date):
                 options.get('focal'), ", ".join(("'{}'").format(a) for a in focals_available.keys())))
 
     _eventtarget = re.search(
-        r'hiddenField\|__EVENTTARGET\|([\w*/*\+*]*)', str(raw_data)).groups()[0]
+        r'hiddenField\|__EVENTTARGET\|([\w*/*\+*=*]*)', str(raw_data)).groups()[0]
     _eventargument = re.search(
-        r'hiddenField\|__EVENTARGUMENT\|([\w*/*\+*]*)', str(raw_data)).groups()[0]
+        r'hiddenField\|__EVENTARGUMENT\|([\w*/*\+*=*]*)', str(raw_data)).groups()[0]
     _lastfocus = re.search(
-        r'hiddenField\|__LASTFOCUS\|([\w*/*\+*]*)', str(raw_data)).groups()[0]
+        r'hiddenField\|__LASTFOCUS\|([\w*/*\+*]*=*)', str(raw_data)).groups()[0]
     _viewstate = re.search(
-        r'hiddenField\|__VIEWSTATE\|([\w*/*\+*]*)', str(raw_data)).groups()[0]
+        r'hiddenField\|__VIEWSTATE\|([\w*/*\+*]*=*)', str(raw_data)).groups()[0]
     _viewstategenerator = re.search(
-        r'hiddenField\|__VIEWSTATEGENERATOR\|([\w*/*\+*]*)', str(raw_data)).groups()[0]
+        r'hiddenField\|__VIEWSTATEGENERATOR\|([\w*/*\+*=*]*)', str(raw_data)).groups()[0]
     _eventvalidation = re.search(
-        r'hiddenField\|__EVENTVALIDATION\|([\w*/*\+*]*)', str(raw_data)).groups()[0]
+        r'hiddenField\|__EVENTVALIDATION\|([\w*/*\+*]*=*)', str(raw_data)).groups()[0]
 
     load_time_args = {
         '__EVENTTARGET': _eventtarget,
@@ -187,8 +187,7 @@ def load_tt(text, config, date):
 
     res = session.post(load_time_url, data=load_time_args)
 
-    if res.history and res.history[
-        0].status_code == 302 and res.status_code == 200 and res.url == 'http://timetracker.bairesdev.com/ListaTimeTracker.aspx':
+    if res.history and res.history[0].status_code == 302 and res.status_code == 200 and res.url == 'http://timetracker.bairesdev.com/ListaTimeTracker.aspx':
         print("Done!")
     else:
         print("There was a problem loading your hours :(", file=sys.stderr)
