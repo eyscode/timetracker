@@ -11,7 +11,7 @@ import maya
 
 HOME = str(Path.home())
 CONFIG_PATH = os.path.join(HOME, '.timetracker/config.toml')
-BASE_URL = 'http://timetracker.bairesdev.com/'
+BASE_URL = 'http://timetracker.bairesdev.com'
 
 PROJECT_DROPDOWN = 'ctl00_ContentPlaceHolder_idProyectoDropDownList'
 ASSIGNMENT_DROPDOWN = 'ctl00_ContentPlaceHolder_idTipoAsignacionDropDownList'
@@ -223,7 +223,7 @@ def load_tt(text, config, date):
 
     load_time_page = load_time_form(session)
     project_option = validate_option(
-        load_time_form,
+        load_time_page,
         options.get('project'),
         'Project',
         PROJECT_DROPDOWN
