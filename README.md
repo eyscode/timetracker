@@ -14,7 +14,7 @@ Edit configuration file in ~/.timetracker/config.toml
 [credentials]
 username = 'Homer.Simpson'
 password = 'do.it.for.her'
-    
+
 [options]
 project = 'Springfield Nuclear Power Plant'
 assignment = 'Nuclear Safety Inspection'
@@ -27,20 +27,29 @@ hours = 6
 ```bash
 load-tt [OPTIONS]
 ```
-    
-#### Examples
+
+### Examples
 
 * Load your today hours
+
 ```bash
 load-tt -t "I did something awesome today"
 ```
 
 * Load hours from yesterday
+
 ```bash
-load-tt -t "I did something awesome" -d "yesterday"
+load-tt -t "I did something awesome" -d yesterday
 ```
 
 * Load hours from 3 days ago
+
 ```bash
-load-tt -t "I did something awesome" -d "today-3"
+load-tt -t "I did something awesome" -d "3 days ago"
+```
+
+* Load hours for last monday
+
+```bash
+load-tt -t "I did something awesome" -d monday
 ```
