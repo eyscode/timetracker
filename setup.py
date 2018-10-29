@@ -16,7 +16,7 @@ requirements = [
 
 setup(
     name='timetracker',
-    version='0.1',
+    version='0.1.1',
     description='A command-line utility to load hours in BairesDev Time tracker.',
     url='https://github.com/eyscode/timetracker/',
     author='Eysenck Gómez',
