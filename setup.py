@@ -10,7 +10,8 @@ requirements = [
     'click==6.7',
     'requests==2.18.4',
     'toml==0.9.4',
-    'beautifulsoup4==4.6.0'
+    'beautifulsoup4==4.6.0',
+    'maya==0.5.0'
 ]
 
 setup(

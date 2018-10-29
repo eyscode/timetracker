@@ -3,46 +3,188 @@ from bs4 import BeautifulSoup
 import click
 import toml
 from pathlib import Path
-import datetime
 import re
 import os
 import sys
-
-home = str(Path.home())
-default_config_path = os.path.join(home, '.timetracker/config.toml')
+import maya
 
 
-def today():
-    return datetime.datetime.today().strftime("%d/%m/%Y")
+HOME = str(Path.home())
+CONFIG_PATH = os.path.join(HOME, '.timetracker/config.toml')
+BASE_URL = 'http://timetracker.bairesdev.com'
+
+PROJECT_DROPDOWN = 'ctl00_ContentPlaceHolder_idProyectoDropDownList'
+ASSIGNMENT_DROPDOWN = 'ctl00_ContentPlaceHolder_idTipoAsignacionDropDownList'
+FOCAL_DROPDOWN = 'ctl00_ContentPlaceHolder_idFocalPointClientDropDownList'
 
 
 def validate_date(ctx, param, date):
-    s = re.match(
-        '^(?P<day>today|yesterday)(-(?P<before>[0-9]+))*$', date)
-    if re.match('^[0-3][0-9]/[0-1][0-9]/[1-2][0-9][0-9][0-9]$', date):
-        return date
-    elif s:
-        params = s.groupdict()
-        days_before = 0
-        if params.get('before'):
-            days_before += int(params.get('before'))
-        if params.get('day') == 'yesterday':
-            days_before += 1
-        return (datetime.datetime.today() - datetime.timedelta(days=days_before)).strftime("%d/%m/%Y")
-    else:
+    """
+    Click helper to turn text into a date.
+    """
+    try:
+        return maya.when(date).datetime().strftime(r'%d/%m/%Y')
+    except:
+        raise click.BadParameter(f'I could not parse "{date}" as a date.')
+
+
+def prepare_session(session):
+    """
+    Puts in some default headers into a session.
+    """
+    session.headers.update({
+        'Host': 'timetracker.bairesdev.com',
+        'Upgrade-Insecure-Requests': '1',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 Safari/537.36',
+        'Origin': 'http://timetracker.bairesdev.com',
+        'Referer': 'http://timetracker.bairesdev.com/'
+    })
+
+
+def login(session, credentials):
+    content = session.get(BASE_URL).content
+    login_page = BeautifulSoup(content, 'html.parser')
+    login_args = {
+        'ctl00$ContentPlaceHolder$UserNameTextBox': credentials.get('username'),
+        'ctl00$ContentPlaceHolder$PasswordTextBox': credentials.get('password'),
+        'ctl00$ContentPlaceHolder$LoginButton': 'Login',
+        '__EVENTTARGET': login_page.find('input', {'name': '__EVENTTARGET'}).get('value'),
+        '__EVENTARGUMENT': login_page.find('input', {'name': '__EVENTARGUMENT'}).get('value'),
+        '__VIEWSTATE': login_page.find('input', {'name': '__VIEWSTATE'}).get('value'),
+        '__VIEWSTATEGENERATOR': login_page.find('input', {'name': '__VIEWSTATEGENERATOR'}).get('value'),
+        '__EVENTVALIDATION': login_page.find('input', {'name': '__EVENTVALIDATION'}).get('value')
+    }
+    res = session.post(BASE_URL, data=login_args)
+    if not (
+        res.history
+        and res.history[0].status_code == 302
+        and res.status_code == 200
+        and res.url == f'{BASE_URL}/ListaTimeTracker.aspx'
+    ):
+        raise RuntimeError(
+            "There was a problem login with your credentials. "
+            "Please check them in the config file and try again."
+        )
+
+
+def load_time_form(session):
+    """
+    Go to the load time form.
+    """
+    load_time_url = f'{BASE_URL}/CargaTimeTracker.aspx'
+    content = session.get(load_time_url).content
+    return BeautifulSoup(content, 'html.parser')
+
+
+def validate_option(form, value, name, _id):
+    """
+    Validates that you can actually use the configured project.
+    """
+    options = form.find('select', {'id': _id}).findAll('option')
+    options_available = {
+        opt.text: opt.get('value')
+        for opt in options
+        if opt.text
+    }
+    if not options_available.get(value):
+        names = ', '.join(f'"{p}"' for p in options_available.keys())
         raise click.BadParameter(
-            "date must be in format dd/mm/yyyy. 'today', 'yesterday', 'today-1', 'today-[number]' are also supported")
+            f'{name.capitalize()} "{value}" is not available. '
+            f'Choose from: {names}'
+        )
+    return options_available.get(value)
 
 
-help_text = 'Text description of the hours you are tracking'
-help_config = 'Path to the config file'
-help_date = "Date in format dd/mm/yyyy. 'today', 'yesterday', 'today-1', 'today-[number]' are also supported"
+def set_project(session, form, project_option):
+    """
+    Sets the project into the session so that assignments and focal points become available.
+    """
+    load_time_url = f'{BASE_URL}/CargaTimeTracker.aspx'
+    load_assigments_args = {
+        'ctl00$ContentPlaceHolder$ScriptManager': 'ctl00$ContentPlaceHolder$UpdatePanel1|ctl00$ContentPlaceHolder$idProyectoDropDownList',
+        '__EVENTTARGET': form.find('input', {'name': '__EVENTTARGET'}).get('value'),
+        '__EVENTARGUMENT': form.find('input', {'name': '__EVENTARGUMENT'}).get('value'),
+        '__LASTFOCUS': form.find('input', {'name': '__LASTFOCUS'}).get('value'),
+        '__VIEWSTATE': form.find('input', {'name': '__VIEWSTATE'}).get('value'),
+        '__VIEWSTATEGENERATOR': form.find('input', {'name': '__VIEWSTATEGENERATOR'}).get('value'),
+        '__EVENTVALIDATION': form.find('input', {'name': '__EVENTVALIDATION'}).get('value'),
+        'ctl00$ContentPlaceHolder$txtFrom': maya.when('today').datetime().strftime("%d/%m/%Y"),
+        'ctl00$ContentPlaceHolder$idProyectoDropDownList': project_option,
+        'ctl00$ContentPlaceHolder$DescripcionTextBox': '',
+        'ctl00$ContentPlaceHolder$TiempoTextBox': '',
+        'ctl00$ContentPlaceHolder$idTipoAsignacionDropDownList': '',
+        'ctl00$ContentPlaceHolder$idFocalPointClientDropDownList': '',
+        '__ASYNCPOST': 'true'
+    }
+    content = session.post(load_time_url, data=load_assigments_args).content
+
+    _eventtarget = re.search(
+        r'hiddenField\|__EVENTTARGET\|([\w*/*\+*=*]*)', str(content)).groups()[0]
+    _eventargument = re.search(
+        r'hiddenField\|__EVENTARGUMENT\|([\w*/*\+*=*]*)', str(content)).groups()[0]
+    _lastfocus = re.search(
+        r'hiddenField\|__LASTFOCUS\|([\w*/*\+*]*=*)', str(content)).groups()[0]
+    _viewstate = re.search(
+        r'hiddenField\|__VIEWSTATE\|([\w*/*\+*]*=*)', str(content)).groups()[0]
+    _viewstategenerator = re.search(
+        r'hiddenField\|__VIEWSTATEGENERATOR\|([\w*/*\+*=*]*)', str(content)).groups()[0]
+    _eventvalidation = re.search(
+        r'hiddenField\|__EVENTVALIDATION\|([\w*/*\+*]*=*)', str(content)).groups()[0]
+    secrets = {
+        '__EVENTTARGET': _eventtarget,
+        '__EVENTARGUMENT': _eventargument,
+        '__LASTFOCUS': _lastfocus,
+        '__VIEWSTATE': _viewstate,
+        '__VIEWSTATEGENERATOR': _viewstategenerator,
+        '__EVENTVALIDATION': _eventvalidation,
+
+    }
+
+    return secrets, BeautifulSoup(content, 'html.parser')
+
+
+def actually_load(session, secrets, options):
+    load_time_url = f'{BASE_URL}/CargaTimeTracker.aspx'
+    load_time_args = {
+        **secrets,
+        'ctl00$ContentPlaceHolder$txtFrom': options['date'],
+        'ctl00$ContentPlaceHolder$idProyectoDropDownList': options['project'],
+        'ctl00$ContentPlaceHolder$DescripcionTextBox': options['text'],
+        'ctl00$ContentPlaceHolder$TiempoTextBox': options['hours'],
+        'ctl00$ContentPlaceHolder$idTipoAsignacionDropDownList': options['assignment'],
+        'ctl00$ContentPlaceHolder$idFocalPointClientDropDownList': options['focal'],
+        'ctl00$ContentPlaceHolder$btnAceptar': 'Accept'
+    }
+
+    res = session.post(load_time_url, data=load_time_args)
+
+    if not (
+        res.history
+        and res.history[0].status_code == 302
+        and res.status_code == 200
+        and res.url == f'{BASE_URL}/ListaTimeTracker.aspx'
+    ):
+        raise RuntimeError("There was a problem loading your timetracker :(")
 
 
 @click.command()
-@click.option('--text', '-t', help=help_text, required=True)
-@click.option('--config', '-c', default=default_config_path, type=click.Path(exists=True), help=help_config)
-@click.option('--date', '-d', default=today, help=help_date, callback=validate_date)
+@click.option(
+    '--text', '-t',
+    help='What did you do?',
+    required=True
+)
+@click.option(
+    '--date', '-d',
+    help='When did you do it?',
+    default='today',
+    callback=validate_date
+)
+@click.option(
+    '--config', '-c',
+    default=CONFIG_PATH,
+    type=click.Path(exists=True, dir_okay=False),
+    help='Path to a config file'
+)
 def load_tt(text, config, date):
     """
     A command-line utility to load hours in BairesDev Time tracker
@@ -69,125 +211,49 @@ def load_tt(text, config, date):
     if 'hours' not in options:
         raise click.BadParameter("'hours' missing in 'options' config option")
 
-    initial_headers = {
-        'Host': 'timetracker.bairesdev.com',
-        'Upgrade-Insecure-Requests': '1',
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 Safari/537.36',
-        'Origin': 'http://timetracker.bairesdev.com',
-        'Referer': 'http://timetracker.bairesdev.com/'
-    }
 
     session = requests.Session()
-    session.headers.update(initial_headers)
+    prepare_session(session)
 
-    base_url = 'http://timetracker.bairesdev.com/'
+    try:
+        login(session, credentials)
+    except RuntimeError as e:
+        click.echo(f'{e}', err=True, color='red')
+        sys.exit(1)
 
-    login_page = BeautifulSoup(session.get(base_url).content, 'html.parser')
-    login_args = {
-        'ctl00$ContentPlaceHolder$UserNameTextBox': credentials.get('username'),
-        'ctl00$ContentPlaceHolder$PasswordTextBox': credentials.get('password'),
-        'ctl00$ContentPlaceHolder$LoginButton': 'Login',
-        '__EVENTTARGET': login_page.find('input', {'name': '__EVENTTARGET'}).get('value'),
-        '__EVENTARGUMENT': login_page.find('input', {'name': '__EVENTARGUMENT'}).get('value'),
-        '__VIEWSTATE': login_page.find('input', {'name': '__VIEWSTATE'}).get('value'),
-        '__VIEWSTATEGENERATOR': login_page.find('input', {'name': '__VIEWSTATEGENERATOR'}).get('value'),
-        '__EVENTVALIDATION': login_page.find('input', {'name': '__EVENTVALIDATION'}).get('value')
+    load_time_page = load_time_form(session)
+    project_option = validate_option(
+        load_time_page,
+        options.get('project'),
+        'Project',
+        PROJECT_DROPDOWN
+    )
+    secrets, load_assigments_page = set_project(session,  load_time_page, project_option)
+    assignment_option = validate_option(
+        load_assigments_page,
+        options.get('assignment'),
+        'Assignment',
+        ASSIGNMENT_DROPDOWN
+    )
+    focal_option = validate_option(
+        load_assigments_page,
+        options.get('focal'),
+        'Focal',
+        FOCAL_DROPDOWN
+    )
+
+    data = {
+        'project': project_option,
+        'assignment': assignment_option,
+        'focal': focal_option,
+        'text': text,
+        'date': date,
+        'hours': options.get('hours')
     }
 
-    res = session.post(base_url, data=login_args)
-
-    if not (res.history and res.history[
-            0].status_code == 302 and res.status_code == 200 and res.url == 'http://timetracker.bairesdev.com/ListaTimeTracker.aspx'):
-        print("There was a problem login with your credentials. Please check them in the config file and try again.", file=sys.stderr)
-        return
-
-    load_time_url = 'http://timetracker.bairesdev.com/CargaTimeTracker.aspx'
-
-    load_time_page = BeautifulSoup(session.get(
-        load_time_url).content, 'html.parser')
-
-    projects_available = {
-        opt.text: opt.get('value') for opt in load_time_page.find(
-            'select', {'id': 'ctl00_ContentPlaceHolder_idProyectoDropDownList'}).findAll('option') if opt.text
-    }
-
-    if not projects_available.get(options.get('project')):
-        raise click.BadParameter(
-            "Project '{}' is not available. Specify a valid project name. Available projects: {}".format(
-                options.get('project'), ", ".join(("'{}'").format(a) for a in projects_available.keys())))
-
-    load_assigments_args = {
-        'ctl00$ContentPlaceHolder$ScriptManager': 'ctl00$ContentPlaceHolder$UpdatePanel1|ctl00$ContentPlaceHolder$idProyectoDropDownList',
-        '__EVENTTARGET': load_time_page.find('input', {'name': '__EVENTTARGET'}).get('value'),
-        '__EVENTARGUMENT': load_time_page.find('input', {'name': '__EVENTARGUMENT'}).get('value'),
-        '__LASTFOCUS': load_time_page.find('input', {'name': '__LASTFOCUS'}).get('value'),
-        '__VIEWSTATE': load_time_page.find('input', {'name': '__VIEWSTATE'}).get('value'),
-        '__VIEWSTATEGENERATOR': load_time_page.find('input', {'name': '__VIEWSTATEGENERATOR'}).get('value'),
-        '__EVENTVALIDATION': load_time_page.find('input', {'name': '__EVENTVALIDATION'}).get('value'),
-        'ctl00$ContentPlaceHolder$txtFrom': datetime.datetime.today().strftime("%d/%m/%Y"),
-        'ctl00$ContentPlaceHolder$idProyectoDropDownList': projects_available.get(options.get('project')),
-        'ctl00$ContentPlaceHolder$DescripcionTextBox': '',
-        'ctl00$ContentPlaceHolder$TiempoTextBox': '',
-        'ctl00$ContentPlaceHolder$idTipoAsignacionDropDownList': '',
-        'ctl00$ContentPlaceHolder$idFocalPointClientDropDownList': '',
-        '__ASYNCPOST': 'true'
-    }
-
-    raw_data = session.post(load_time_url, data=load_assigments_args).content
-
-    load_assigments_page = BeautifulSoup(raw_data, 'html.parser')
-
-    assigments_available = {
-        opt.text: opt.get('value') for opt in load_assigments_page.find(
-            'select', {'id': 'ctl00_ContentPlaceHolder_idTipoAsignacionDropDownList'}).findAll('option') if opt.text
-    }
-
-    focals_available = {
-        opt.text: opt.get('value') for opt in load_assigments_page.find(
-            'select', {'id': 'ctl00_ContentPlaceHolder_idFocalPointClientDropDownList'}).findAll('option') if opt.text
-    }
-
-    if not assigments_available.get(options.get('assignment')):
-        raise click.BadParameter(
-            "Assignment '{}' is not available. Specify a valid assignment name. Available assigments: {}".format(
-                options.get('assignment'), ", ".join(("'{}'").format(a) for a in assigments_available.keys())))
-    if not focals_available.get(options.get('focal')):
-        raise click.BadParameter(
-            "Focal point '{}' is not available. Specify a valid focal point name. Available focal points: {}".format(
-                options.get('focal'), ", ".join(("'{}'").format(a) for a in focals_available.keys())))
-
-    _eventtarget = re.search(
-        r'hiddenField\|__EVENTTARGET\|([\w*/*\+*=*]*)', str(raw_data)).groups()[0]
-    _eventargument = re.search(
-        r'hiddenField\|__EVENTARGUMENT\|([\w*/*\+*=*]*)', str(raw_data)).groups()[0]
-    _lastfocus = re.search(
-        r'hiddenField\|__LASTFOCUS\|([\w*/*\+*]*=*)', str(raw_data)).groups()[0]
-    _viewstate = re.search(
-        r'hiddenField\|__VIEWSTATE\|([\w*/*\+*]*=*)', str(raw_data)).groups()[0]
-    _viewstategenerator = re.search(
-        r'hiddenField\|__VIEWSTATEGENERATOR\|([\w*/*\+*=*]*)', str(raw_data)).groups()[0]
-    _eventvalidation = re.search(
-        r'hiddenField\|__EVENTVALIDATION\|([\w*/*\+*]*=*)', str(raw_data)).groups()[0]
-
-    load_time_args = {
-        '__EVENTTARGET': _eventtarget,
-        '__EVENTARGUMENT': _eventargument,
-        '__LASTFOCUS': _lastfocus,
-        '__VIEWSTATE': _viewstate,
-        '__VIEWSTATEGENERATOR': _viewstategenerator,
-        '__EVENTVALIDATION': _eventvalidation,
-        'ctl00$ContentPlaceHolder$txtFrom': date,
-        'ctl00$ContentPlaceHolder$idProyectoDropDownList': projects_available.get(options.get('project')),
-        'ctl00$ContentPlaceHolder$DescripcionTextBox': text,
-        'ctl00$ContentPlaceHolder$TiempoTextBox': options.get('hours'),
-        'ctl00$ContentPlaceHolder$idTipoAsignacionDropDownList': assigments_available.get(options.get('assignment')),
-        'ctl00$ContentPlaceHolder$idFocalPointClientDropDownList': focals_available.get(options.get('focal')),
-        'ctl00$ContentPlaceHolder$btnAceptar': 'Accept'
-    }
-
-    res = session.post(load_time_url, data=load_time_args)
-
-    if res.history and res.history[0].status_code == 302 and res.status_code == 200 and res.url == 'http://timetracker.bairesdev.com/ListaTimeTracker.aspx':
-        print("Done!")
-    else:
-        print("There was a problem loading your hours :(", file=sys.stderr)
+    try:
+        actually_load(session, secrets, data)
+        click.echo('success!')
+    except RuntimeError as e:
+        click.echo(f'{e}', err=True, color='red')
+        sys.exit(1)
