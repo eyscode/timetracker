@@ -152,7 +152,7 @@ def actually_load(session, secrets, options):
         'ctl00$ContentPlaceHolder$DescripcionTextBox': options['text'],
         'ctl00$ContentPlaceHolder$TiempoTextBox': options['hours'],
         'ctl00$ContentPlaceHolder$idTipoAsignacionDropDownList': options['assignment'],
-        'ctl00$ContentPlaceHolder$idFocalPointClientDropDownList': options['focal'],
+        'ctl00$ContentPlaceHolder$idFocalPointClientDropDownList': options.get('focal'),
         'ctl00$ContentPlaceHolder$btnAceptar': 'Accept'
     }
 
@@ -185,7 +185,19 @@ def actually_load(session, secrets, options):
     type=click.Path(exists=True, dir_okay=False),
     help='Path to a config file'
 )
-def load_tt(text, config, date):
+@click.option(
+    '--pto', '-p',
+    default=False,
+    is_flag=True,
+    help='Is this day paid time off'
+)
+@click.option(
+    '--vacations', '-v',
+    default=False,
+    is_flag=True,
+    help='Is this day paid time off'
+)
+def load_tt(text, config, date, pto, vacations):
     """
     A command-line utility to load hours in BairesDev Time tracker
     """
@@ -211,6 +223,12 @@ def load_tt(text, config, date):
     if 'hours' not in options:
         raise click.BadParameter("'hours' missing in 'options' config option")
 
+    if pto:
+        options['project'] = 'BairesDev - Absence'
+        options['assignment'] = 'National Holiday'
+    if vacations:
+        options['project'] = 'BairesDev - Absence'
+        options['assignment'] = 'Vacations'
 
     session = requests.Session()
     prepare_session(session)
@@ -235,21 +253,23 @@ def load_tt(text, config, date):
         'Assignment',
         ASSIGNMENT_DROPDOWN
     )
-    focal_option = validate_option(
-        load_assigments_page,
-        options.get('focal'),
-        'Focal',
-        FOCAL_DROPDOWN
-    )
 
     data = {
         'project': project_option,
         'assignment': assignment_option,
-        'focal': focal_option,
         'text': text,
         'date': date,
         'hours': options.get('hours')
     }
+
+    if not pto:
+        focal_option = validate_option(
+            load_assigments_page,
+            options.get('focal'),
+            'Focal',
+            FOCAL_DROPDOWN
+        )
+        data['focal'] = focal_option
 
     try:
         actually_load(session, secrets, data)
