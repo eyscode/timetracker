@@ -6,17 +6,16 @@ home = str(Path.home())
 
 
 requirements = [
-    'beautifulsoup4==4.6.0',
-    'click==6.7',
-    'requests==2.18.4',
-    'toml==0.9.4',
-    'beautifulsoup4==4.6.0',
+    'beautifulsoup4==4.6.3',
+    'click==7.0',
+    'requests==2.20.1',
+    'toml==0.10.0',
     'maya==0.5.0'
 ]
 
 setup(
     name='timetracker',
-    version='0.1.1',
+    version='0.1.2',
     description='A command-line utility to load hours in BairesDev Time tracker.',
     url='https://github.com/eyscode/timetracker/',
     author='Eysenck Gómez',

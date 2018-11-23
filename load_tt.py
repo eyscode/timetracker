@@ -8,7 +8,6 @@ import os
 import sys
 import maya
 
-
 HOME = str(Path.home())
 CONFIG_PATH = os.path.join(HOME, '.timetracker/config.toml')
 BASE_URL = 'http://timetracker.bairesdev.com'
@@ -23,9 +22,11 @@ def validate_date(ctx, param, date):
     Click helper to turn text into a date.
     """
     try:
+        # Maya uses mm/dd/yyyy format, but timetracker uses dd/mm/yyyy format, so we convert it
         return maya.when(date).datetime().strftime(r'%d/%m/%Y')
     except:
-        raise click.BadParameter(f'I could not parse "{date}" as a date.')
+        raise click.BadParameter(
+            f'''{date} is not a valid date.\n\nPlease use 'mm/dd/yyyy' format. Values like 'next week', 'now', 'tomorrow' are also allowed.''')
 
 
 def prepare_session(session):
@@ -56,10 +57,10 @@ def login(session, credentials):
     }
     res = session.post(BASE_URL, data=login_args)
     if not (
-        res.history
-        and res.history[0].status_code == 302
-        and res.status_code == 200
-        and res.url == f'{BASE_URL}/ListaTimeTracker.aspx'
+            res.history
+            and res.history[0].status_code == 302
+            and res.status_code == 200
+            and res.url == f'{BASE_URL}/ListaTimeTracker.aspx'
     ):
         raise RuntimeError(
             "There was a problem login with your credentials. "
@@ -159,10 +160,10 @@ def actually_load(session, secrets, options):
     res = session.post(load_time_url, data=load_time_args)
 
     if not (
-        res.history
-        and res.history[0].status_code == 302
-        and res.status_code == 200
-        and res.url == f'{BASE_URL}/ListaTimeTracker.aspx'
+            res.history
+            and res.history[0].status_code == 302
+            and res.status_code == 200
+            and res.url == f'{BASE_URL}/ListaTimeTracker.aspx'
     ):
         raise RuntimeError("There was a problem loading your timetracker :(")
 
@@ -211,7 +212,6 @@ def load_tt(text, config, date):
     if 'hours' not in options:
         raise click.BadParameter("'hours' missing in 'options' config option")
 
-
     session = requests.Session()
     prepare_session(session)
 
@@ -228,7 +228,7 @@ def load_tt(text, config, date):
         'Project',
         PROJECT_DROPDOWN
     )
-    secrets, load_assigments_page = set_project(session,  load_time_page, project_option)
+    secrets, load_assigments_page = set_project(session, load_time_page, project_option)
     assignment_option = validate_option(
         load_assigments_page,
         options.get('assignment'),
