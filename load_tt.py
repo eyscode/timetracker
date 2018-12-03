@@ -263,7 +263,7 @@ def load_tt(text, config, date, pto, vacations):
         'hours': options.get('hours')
     }
 
-    if not pto:
+    if not pto and not vacations:
         focal_option = validate_option(
             load_assigments_page,
             options.get('focal'),
