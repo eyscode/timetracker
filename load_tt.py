@@ -7,6 +7,7 @@ import re
 import os
 import sys
 import maya
+from tzlocal import get_localzone
 
 HOME = str(Path.home())
 CONFIG_PATH = os.path.join(HOME, '.timetracker/config.toml')
@@ -23,7 +24,7 @@ def validate_date(ctx, param, date):
     """
     try:
         # Maya uses mm/dd/yyyy format, but timetracker uses dd/mm/yyyy format, so we convert it
-        return maya.when(date).datetime().strftime(r'%d/%m/%Y')
+        return maya.when(date).datetime(to_timezone=get_localzone().zone).strftime(r'%d/%m/%Y')
     except:
         raise click.BadParameter(
             f'''{date} is not a valid date.\n\nPlease use 'mm/dd/yyyy' format. Values like 'next week', 'now', 'tomorrow' are also allowed.''')
