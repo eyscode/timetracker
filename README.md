@@ -53,3 +53,9 @@ load-tt -t "I did something awesome" -d "3 days ago"
 ```bash
 load-tt -t "I did something awesome" -d monday
 ```
+
+* Load your hours for a day
+
+```bash
+load-tt -t "I did something awesome" -d 09/20/2018
+```

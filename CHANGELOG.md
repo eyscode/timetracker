@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.1.2] - 2018-11-23
+- Fix some date parse stuff and update readme.
+
 ## [0.1.1] - 2018-10-29
 - Drop support for dates with math notation `-d today-2`.
 - Add human date support, now you can use `-d monday` for the last monday.
