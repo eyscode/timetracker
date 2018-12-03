@@ -172,7 +172,6 @@ def actually_load(session, secrets, options):
 @click.option(
     '--text', '-t',
     help='What did you do?',
-    required=True
 )
 @click.option(
     '--date', '-d',
@@ -224,12 +223,17 @@ def load_tt(text, config, date, pto, vacations):
     if 'hours' not in options:
         raise click.BadParameter("'hours' missing in 'options' config option")
 
+    if text is None and not pto and not vacations:
+        raise click.BadParameter("You need to specify what you did with --text (-t)")
+
     if pto:
         options['project'] = 'BairesDev - Absence'
         options['assignment'] = 'National Holiday'
+        text = text if text is not None else 'PTO'
     if vacations:
         options['project'] = 'BairesDev - Absence'
         options['assignment'] = 'Vacations'
+        text = text if text is not None else 'Vacations'
 
     session = requests.Session()
     prepare_session(session)
