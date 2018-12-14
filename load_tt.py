@@ -24,7 +24,8 @@ def validate_date(ctx, param, date):
     """
     try:
         # Maya uses mm/dd/yyyy format, but timetracker uses dd/mm/yyyy format, so we convert it
-        return maya.when(date).datetime(to_timezone=get_localzone().zone).strftime(r'%d/%m/%Y')
+        localtime = get_localzone().zone
+        return maya.when(date, timezone=localtime).datetime(to_timezone=localtime).strftime(r'%d/%m/%Y')
     except:
         raise click.BadParameter(
             f'''{date} is not a valid date.\n\nPlease use 'mm/dd/yyyy' format. Values like 'next week', 'now', 'tomorrow' are also allowed.''')
