@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.0] - 2018-12-18
+- Add pto and vacations support.
+- Fix date bug for `today` and `yesterday` when timezone time is a day after utc time.
+
 ## [0.1.2] - 2018-11-23
 - Fix some date parse stuff and update readme.
 

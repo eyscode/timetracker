@@ -16,11 +16,11 @@ requirements = [
 
 setup(
     name='timetracker',
-    version='0.1.2',
+    version='0.2.0',
     description='A command-line utility to load hours in BairesDev Time tracker.',
     url='https://github.com/eyscode/timetracker/',
     author='Eysenck Gómez',
-    author_email='eyscode@gmail.com',
+    author_email='eysenck.gomez@gmail.com',
     py_modules=['load_tt'],
     install_requires=requirements,
     entry_points='''
