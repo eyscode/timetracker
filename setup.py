@@ -10,7 +10,8 @@ requirements = [
     'click==7.0',
     'requests==2.20.1',
     'toml==0.10.0',
-    'maya==0.5.0'
+    'maya==0.5.0',
+    'tzlocal==1.5.1'
 ]
 
 setup(

@@ -7,6 +7,7 @@ import re
 import os
 import sys
 import maya
+from tzlocal import get_localzone
 
 HOME = str(Path.home())
 CONFIG_PATH = os.path.join(HOME, '.timetracker/config.toml')
@@ -23,7 +24,8 @@ def validate_date(ctx, param, date):
     """
     try:
         # Maya uses mm/dd/yyyy format, but timetracker uses dd/mm/yyyy format, so we convert it
-        return maya.when(date).datetime().strftime(r'%d/%m/%Y')
+        localtime = get_localzone().zone
+        return maya.when(date, timezone=localtime).datetime(to_timezone=localtime).strftime(r'%d/%m/%Y')
     except:
         raise click.BadParameter(
             f'''{date} is not a valid date.\n\nPlease use 'mm/dd/yyyy' format. Values like 'next week', 'now', 'tomorrow' are also allowed.''')
@@ -153,7 +155,7 @@ def actually_load(session, secrets, options):
         'ctl00$ContentPlaceHolder$DescripcionTextBox': options['text'],
         'ctl00$ContentPlaceHolder$TiempoTextBox': options['hours'],
         'ctl00$ContentPlaceHolder$idTipoAsignacionDropDownList': options['assignment'],
-        'ctl00$ContentPlaceHolder$idFocalPointClientDropDownList': options['focal'],
+        'ctl00$ContentPlaceHolder$idFocalPointClientDropDownList': options.get('focal'),
         'ctl00$ContentPlaceHolder$btnAceptar': 'Accept'
     }
 
@@ -172,7 +174,6 @@ def actually_load(session, secrets, options):
 @click.option(
     '--text', '-t',
     help='What did you do?',
-    required=True
 )
 @click.option(
     '--date', '-d',
@@ -186,7 +187,19 @@ def actually_load(session, secrets, options):
     type=click.Path(exists=True, dir_okay=False),
     help='Path to a config file'
 )
-def load_tt(text, config, date):
+@click.option(
+    '--pto', '-p',
+    default=False,
+    is_flag=True,
+    help='Is this day paid time off'
+)
+@click.option(
+    '--vacations', '-v',
+    default=False,
+    is_flag=True,
+    help='Is this day paid time off'
+)
+def load_tt(text, config, date, pto, vacations):
     """
     A command-line utility to load hours in BairesDev Time tracker
     """
@@ -212,6 +225,18 @@ def load_tt(text, config, date):
     if 'hours' not in options:
         raise click.BadParameter("'hours' missing in 'options' config option")
 
+    if text is None and not pto and not vacations:
+        raise click.BadParameter("You need to specify what you did with --text (-t)")
+
+    if pto:
+        options['project'] = 'BairesDev - Absence'
+        options['assignment'] = 'National Holiday'
+        text = text if text is not None else 'PTO'
+    if vacations:
+        options['project'] = 'BairesDev - Absence'
+        options['assignment'] = 'Vacations'
+        text = text if text is not None else 'Vacations'
+
     session = requests.Session()
     prepare_session(session)
 
@@ -235,21 +260,23 @@ def load_tt(text, config, date):
         'Assignment',
         ASSIGNMENT_DROPDOWN
     )
-    focal_option = validate_option(
-        load_assigments_page,
-        options.get('focal'),
-        'Focal',
-        FOCAL_DROPDOWN
-    )
 
     data = {
         'project': project_option,
         'assignment': assignment_option,
-        'focal': focal_option,
         'text': text,
         'date': date,
         'hours': options.get('hours')
     }
+
+    if not pto and not vacations:
+        focal_option = validate_option(
+            load_assigments_page,
+            options.get('focal'),
+            'Focal',
+            FOCAL_DROPDOWN
+        )
+        data['focal'] = focal_option
 
     try:
         actually_load(session, secrets, data)
