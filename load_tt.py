@@ -11,7 +11,7 @@ from tzlocal import get_localzone
 
 HOME = str(Path.home())
 CONFIG_PATH = os.path.join(HOME, '.timetracker/config.toml')
-BASE_URL = 'http://timetracker.bairesdev.com'
+BASE_URL = 'https://timetracker.bairesdev.com'
 
 PROJECT_DROPDOWN = 'ctl00_ContentPlaceHolder_idProyectoDropDownList'
 ASSIGNMENT_DROPDOWN = 'ctl00_ContentPlaceHolder_idTipoAsignacionDropDownList'

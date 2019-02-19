@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 from pathlib import Path
 import os
 
@@ -6,17 +6,17 @@ home = str(Path.home())
 
 
 requirements = [
-    'beautifulsoup4==4.6.3',
+    'beautifulsoup4==4.7.1',
     'click==7.0',
-    'requests==2.20.1',
+    'requests==2.21.0',
     'toml==0.10.0',
-    'maya==0.5.0',
+    'maya==0.6.1',
     'tzlocal==1.5.1'
 ]
 
 setup(
     name='timetracker',
-    version='0.2.0',
+    version='0.2.1',
     description='A command-line utility to load hours in BairesDev Time tracker.',
     url='https://github.com/eyscode/timetracker/',
     author='Eysenck Gómez',

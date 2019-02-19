@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.2.1] - 2019-02-19
+- Change base url since timetracker.bairesdev.com is now using https protocol.  
+
 ## [0.2.0] - 2018-12-18
 - Add pto and vacations support.
 - Fix date bug for `today` and `yesterday` when timezone time is a day after utc time.

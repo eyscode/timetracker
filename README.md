@@ -1,6 +1,6 @@
 # Time tracker
 
-> Load your hours in [TimeTracker](http://timetracker.bairesdev.com) with just a command line.
+> Load your hours in [TimeTracker](https://timetracker.bairesdev.com) with just a command line.
 
 ## Install
 
