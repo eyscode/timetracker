@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.0] - 2019-05-24
+- `tt` is now the only one true command line that groups all utilities.
+    - `tt load` is the new utility to load hours. It does pretty much the same as `load-tt` (which was deleted).
+    - `tt show` is the new utility to shows loaded hours. It supports several params, please refer to `--help` for more information. 
+- dd/mm/yyyy is the default date format to use.   
+
 ## [0.2.1] - 2019-02-19
 - Change base url since timetracker.bairesdev.com is now using https protocol.  
 

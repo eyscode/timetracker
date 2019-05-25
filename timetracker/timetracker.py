@@ -1,34 +1,18 @@
+from datetime import datetime
+
 import requests
+from beautifultable import BeautifulTable
 from bs4 import BeautifulSoup
 import click
 import toml
-from pathlib import Path
 import re
-import os
 import sys
 import maya
-from tzlocal import get_localzone
 
-HOME = str(Path.home())
-CONFIG_PATH = os.path.join(HOME, '.timetracker/config.toml')
-BASE_URL = 'https://timetracker.bairesdev.com'
-
-PROJECT_DROPDOWN = 'ctl00_ContentPlaceHolder_idProyectoDropDownList'
-ASSIGNMENT_DROPDOWN = 'ctl00_ContentPlaceHolder_idTipoAsignacionDropDownList'
-FOCAL_DROPDOWN = 'ctl00_ContentPlaceHolder_idFocalPointClientDropDownList'
-
-
-def validate_date(ctx, param, date):
-    """
-    Click helper to turn text into a date.
-    """
-    try:
-        # Maya uses mm/dd/yyyy format, but timetracker uses dd/mm/yyyy format, so we convert it
-        localtime = get_localzone().zone
-        return maya.when(date, timezone=localtime).datetime(to_timezone=localtime).strftime(r'%d/%m/%Y')
-    except:
-        raise click.BadParameter(
-            f'''{date} is not a valid date.\n\nPlease use 'mm/dd/yyyy' format. Values like 'next week', 'now', 'tomorrow' are also allowed.''')
+from .constants import (
+    PROJECT_DROPDOWN, FOCAL_DROPDOWN, ASSIGNMENT_DROPDOWN, LOGIN_CREDENTIALS, LOAD_HOURS_OPTIONS, WEEKDAYS
+)
+from .constants import BASE_URL
 
 
 def prepare_session(session):
@@ -51,8 +35,6 @@ def login(session, credentials):
         'ctl00$ContentPlaceHolder$UserNameTextBox': credentials.get('username'),
         'ctl00$ContentPlaceHolder$PasswordTextBox': credentials.get('password'),
         'ctl00$ContentPlaceHolder$LoginButton': 'Login',
-        '__EVENTTARGET': login_page.find('input', {'name': '__EVENTTARGET'}).get('value'),
-        '__EVENTARGUMENT': login_page.find('input', {'name': '__EVENTARGUMENT'}).get('value'),
         '__VIEWSTATE': login_page.find('input', {'name': '__VIEWSTATE'}).get('value'),
         '__VIEWSTATEGENERATOR': login_page.find('input', {'name': '__VIEWSTATEGENERATOR'}).get('value'),
         '__EVENTVALIDATION': login_page.find('input', {'name': '__EVENTVALIDATION'}).get('value')
@@ -68,6 +50,7 @@ def login(session, credentials):
             "There was a problem login with your credentials. "
             "Please check them in the config file and try again."
         )
+    return BeautifulSoup(res.content, 'html.parser')
 
 
 def load_time_form(session):
@@ -98,6 +81,25 @@ def validate_option(form, value, name, _id):
     return options_available.get(value)
 
 
+def fetch_hours(session, form, start, end):
+    """
+    Fetches list of loaded hours
+    """
+    list_time_url = f'{BASE_URL}/ListaTimeTracker.aspx'
+    args = {
+        '__EVENTTARGET': 'ctl00$ContentPlaceHolder$AplicarFiltroLinkButton',
+        '__EVENTARGUMENT': '',
+        '__VIEWSTATE': form.find('input', {'name': '__VIEWSTATE'}).get('value'),
+        '__VIEWSTATEGENERATOR': form.find('input', {'name': '__VIEWSTATEGENERATOR'}).get('value'),
+        '__VIEWSTATEENCRYPTED': '',
+        '__EVENTVALIDATION': form.find('input', {'name': '__EVENTVALIDATION'}).get('value'),
+        'ctl00$ContentPlaceHolder$txtFrom': start,
+        'ctl00$ContentPlaceHolder$txtTo': end
+    }
+    content = session.post(list_time_url, data=args).content
+    return BeautifulSoup(content, 'html.parser')
+
+
 def set_project(session, form, project_option):
     """
     Sets the project into the session so that assignments and focal points become available.
@@ -105,9 +107,6 @@ def set_project(session, form, project_option):
     load_time_url = f'{BASE_URL}/CargaTimeTracker.aspx'
     load_assigments_args = {
         'ctl00$ContentPlaceHolder$ScriptManager': 'ctl00$ContentPlaceHolder$UpdatePanel1|ctl00$ContentPlaceHolder$idProyectoDropDownList',
-        '__EVENTTARGET': form.find('input', {'name': '__EVENTTARGET'}).get('value'),
-        '__EVENTARGUMENT': form.find('input', {'name': '__EVENTARGUMENT'}).get('value'),
-        '__LASTFOCUS': form.find('input', {'name': '__LASTFOCUS'}).get('value'),
         '__VIEWSTATE': form.find('input', {'name': '__VIEWSTATE'}).get('value'),
         '__VIEWSTATEGENERATOR': form.find('input', {'name': '__VIEWSTATEGENERATOR'}).get('value'),
         '__EVENTVALIDATION': form.find('input', {'name': '__EVENTVALIDATION'}).get('value'),
@@ -146,6 +145,43 @@ def set_project(session, form, project_option):
     return secrets, BeautifulSoup(content, 'html.parser')
 
 
+def hours_as_table(content, *, current_month, full, show_weekday):
+    """
+    Validates that you can actually use the configured project.
+    """
+    table = BeautifulTable()
+    if full:
+        column_headers = ["Date", "Hours", "Project", "Assigment Type", "Description"]
+    else:
+        column_headers = ["Date", "Description"]
+
+    if show_weekday:
+        column_headers = ["Weekday", *column_headers]
+
+    table.column_headers = column_headers
+
+    rows = content.find(class_='tbl-respuestas').find_all('tr')
+
+    for row in rows[:-1]:
+        cols = row.find_all('td')
+        if cols:
+            date = cols[0].string if not current_month else cols[0].string[:2]
+            if full:
+                values = [date, cols[1].string, cols[2].string, cols[3].string, cols[4].string]
+            else:
+                values = [date, cols[4].string]
+            if show_weekday:
+                weekday = datetime.strptime(cols[0].string, r'%d/%m/%Y').weekday()
+                values = [WEEKDAYS[weekday], *values]
+            table.append_row(values)
+
+    if full:
+        values = ["" for i in range(len(column_headers))]
+        values[column_headers.index("Hours")] = rows[-1].find_all('td')[1].string
+        table.append_row(values)
+    return table
+
+
 def actually_load(session, secrets, options):
     load_time_url = f'{BASE_URL}/CargaTimeTracker.aspx'
     load_time_args = {
@@ -170,60 +206,20 @@ def actually_load(session, secrets, options):
         raise RuntimeError("There was a problem loading your timetracker :(")
 
 
-@click.command()
-@click.option(
-    '--text', '-t',
-    help='What did you do?',
-)
-@click.option(
-    '--date', '-d',
-    help='When did you do it?',
-    default='today',
-    callback=validate_date
-)
-@click.option(
-    '--config', '-c',
-    default=CONFIG_PATH,
-    type=click.Path(exists=True, dir_okay=False),
-    help='Path to a config file'
-)
-@click.option(
-    '--pto', '-p',
-    default=False,
-    is_flag=True,
-    help='Is this day paid time off'
-)
-@click.option(
-    '--vacations', '-v',
-    default=False,
-    is_flag=True,
-    help='Is this day paid time off'
-)
-def load_tt(text, config, date, pto, vacations):
-    """
-    A command-line utility to load hours in BairesDev Time tracker
-    """
+def check_required(name, available, required):
+    for value in required:
+        if value not in available:
+            raise click.BadParameter(
+                "'{}' missing in '{}' config option".format(value, name))
 
+
+def load_hours(text, config, date, pto, vacations):
     config = toml.load(config)
     credentials = config.get('credentials')
     options = config.get('options')
 
-    if 'username' not in credentials:
-        raise click.BadParameter(
-            "'username' missing in 'credentials' config option")
-    if 'password' not in credentials:
-        raise click.BadParameter(
-            "'password' missing in 'credentials' config option")
-    if 'project' not in options:
-        raise click.BadParameter(
-            "'project' missing in 'options' config option")
-    if 'assignment' not in options:
-        raise click.BadParameter(
-            "'assignment' missing in 'options' config option")
-    if 'focal' not in options:
-        raise click.BadParameter("'focal' missing in 'options' config option")
-    if 'hours' not in options:
-        raise click.BadParameter("'hours' missing in 'options' config option")
+    check_required('credentials', credentials, LOGIN_CREDENTIALS)
+    check_required('options', options, LOAD_HOURS_OPTIONS)
 
     if text is None and not pto and not vacations:
         raise click.BadParameter("You need to specify what you did with --text (-t)")
@@ -284,3 +280,26 @@ def load_tt(text, config, date, pto, vacations):
     except RuntimeError as e:
         click.echo(f'{e}', err=True, color='red')
         sys.exit(1)
+
+
+def show_hours(config, start, end, full, weekday):
+    config = toml.load(config)
+    credentials = config.get('credentials')
+    check_required('credentials', credentials, LOGIN_CREDENTIALS)
+
+    session = requests.Session()
+    prepare_session(session)
+
+    try:
+        hour_list = login(session, credentials)
+    except RuntimeError as e:
+        click.echo(f'{e}', err=True, color='red')
+        sys.exit(1)
+
+    if not start and not end:
+        click.echo("Current month: {}".format(maya.when('today').datetime().strftime("%m/%Y")))
+    else:
+        hour_list = fetch_hours(session, hour_list, start, end)
+        click.echo(f"Start: {start}, End: {end}")
+
+    click.echo(hours_as_table(hour_list, current_month=not start and not end, full=full, show_weekday=weekday))

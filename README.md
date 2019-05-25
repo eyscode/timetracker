@@ -1,6 +1,6 @@
 # Time tracker
 
-> Load your hours in [TimeTracker](https://timetracker.bairesdev.com) with just a command line.
+> Load and show your hours in [TimeTracker](https://timetracker.bairesdev.com) with just a command line.
 
 ## Install
 
@@ -25,7 +25,11 @@ hours = 6
 ## Usage
 
 ```bash
-load-tt [OPTIONS]
+tt load [OPTIONS]
+```
+
+```
+tt show [OPTIONS]
 ```
 
 ### Examples
@@ -33,29 +37,66 @@ load-tt [OPTIONS]
 * Load your today hours
 
 ```bash
-load-tt -t "I did something awesome today"
-```
-
-* Load hours from yesterday
-
-```bash
-load-tt -t "I did something awesome" -d yesterday
+$ tt load -t "I did something awesome today"
+Success!
 ```
 
 * Load hours from 3 days ago
 
-```bash
-load-tt -t "I did something awesome" -d "3 days ago"
+```
+$ tt load -t "I did something awesome" -d "3 days ago"
+Success!
 ```
 
-* Load hours for last monday
+* Load hours for last friday
 
-```bash
-load-tt -t "I did something awesome" -d monday
+```
+$ tt load -t "I did something awesome" -d friday
+Success!
 ```
 
-* Load your hours for a day
+* Show your current month loaded hours
 
 ```bash
-load-tt -t "I did something awesome" -d 09/20/2018
+$ tt show
+Start: 01/05/2019, 02/05/2019
++------------+-----------------------------------------------------------------+
+|    Date    |                           Description                           |
++------------+-----------------------------------------------------------------+
+| 01/05/2019 |           BURNS-4765 I pressed a button in the board            |
++------------+-----------------------------------------------------------------+
+| 02/05/2019 |              BURNS-4678 I slept all day long                    |
++------------+-----------------------------------------------------------------+
+```
+
+* Show your current month loaded hours with weekdays
+
+```bash
+$ tt show -w
+Start: 01/05/2019, 02/05/2019
++---------+------------+-----------------------------------------------------------------+
+| Weekday |    Date    |                           Description                           |
++---------+------------+-----------------------------------------------------------------+
+|    W    | 01/05/2019 |           BURNS-4765 I pressed a button in the board            |
++---------+------------+-----------------------------------------------------------------+
+|   TH    | 02/05/2019 |              BURNS-4678 I slept all day long                    |
++---------+------------+-----------------------------------------------------------------+
+```
+
+* Show your loaded hours from a range of time
+
+```bash
+$ tt show -s "4 days ago" -e yesterday
+Start: 28/04/2019, 01/05/2019  
++------------+-----------------------------------------------------------------+
+|    Date    |                           Description                           |
++------------+-----------------------------------------------------------------+
+| 28/05/2019 |              BURNS-4210 I slept all day long                    |
++------------+-----------------------------------------------------------------+
+| 29/04/2019 |                      BURNS-4283 I miss March                    |
++------------+-----------------------------------------------------------------+
+| 30/04/2019 |       BURNS-4763 I actually stayed at Moe's Tabern but          |
++------------+-----------------------------------------------------------------+
+| 01/05/2019 |           BURNS-4765 I pressed a button in the board            |
++------------+-----------------------------------------------------------------+
 ```
