@@ -213,7 +213,7 @@ def check_required(name, available, required):
                 "'{}' missing in '{}' config option".format(value, name))
 
 
-def load_hours(text, config, date, pto, vacations):
+def load_hours(text, config, date, pto, vacations, hours):
     config = toml.load(config)
     credentials = config.get('credentials')
     options = config.get('options')
@@ -223,6 +223,13 @@ def load_hours(text, config, date, pto, vacations):
 
     if text is None and not pto and not vacations:
         raise click.BadParameter("You need to specify what you did with --text (-t)")
+
+    if hours is None:
+        hours = options.get('hours')
+
+    if hours is None:
+        raise click.BadParameter("You need to specify hours amount with --hours (-h) or using hours options in config.toml")
+
 
     if pto:
         options['project'] = 'BairesDev - Absence'
@@ -262,7 +269,7 @@ def load_hours(text, config, date, pto, vacations):
         'assignment': assignment_option,
         'text': text,
         'date': date,
-        'hours': options.get('hours')
+        'hours': hours
     }
 
     if not pto and not vacations:
