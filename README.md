@@ -4,7 +4,7 @@
 
 ## Install
 
-    pip install --no-binary -e .
+    pip install timetracker-cli
 
 ## Config file
 
