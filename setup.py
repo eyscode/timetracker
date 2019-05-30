@@ -1,9 +1,15 @@
 from setuptools import setup, find_packages
-from pathlib import Path
 import os
+import sys
+
+py_version = sys.version_info[:2]
+
+if py_version < (3, 4):
+    raise RuntimeError('timetracker-cli requires Python 3.4 or later')
+
+from pathlib import Path
 
 home = str(Path.home())
-
 
 requirements = [
     'beautifulsoup4==4.7.1',
@@ -16,9 +22,9 @@ requirements = [
 ]
 
 setup(
-    name='timetracker',
+    name='timetracker-cli',
     version='1.0.0',
-    description='A command-line utility to load hours in BairesDev Time tracker.',
+    description='A command-line utility to interact with BairesDev Time tracker',
     url='https://github.com/eyscode/timetracker/',
     author='Eysenck Gómez',
     author_email='eysenck.gomez@gmail.com',
@@ -31,5 +37,14 @@ setup(
             'tt=timetracker.cli:tt',
         ],
     },
-    data_files=[(os.path.join(home, '.timetracker'), ['config.toml'])]
+    data_files=[(os.path.join(home, '.timetracker'), ['config.toml'])],
+    classifiers=[
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Environment :: Console",
+        "Operating System :: OS Independent",
+    ],
 )

@@ -83,7 +83,4 @@ def show(config, start, end, full, weekday):
     """
     Show loaded hours
     """
-    if end and not start:
-        raise click.MissingParameter(
-            f'End date requires a starting date')
     show_hours(config, start, end, full, weekday)
