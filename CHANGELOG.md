@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.1.0] - 2019-05-31
+- Add `-h, --hours` option to set hours using cli.    
+
 ## [1.0.0] - 2019-05-24
 - `tt` is now the only one true command line that groups all utilities.
     - `tt load` is the new utility to load hours. It does pretty much the same as `load-tt` (which was deleted).

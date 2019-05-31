@@ -48,10 +48,10 @@ $ tt load -t "I did something awesome" -d "3 days ago"
 Success!
 ```
 
-* Load hours for last friday
+* Load 6.5 hours for last friday
 
 ```
-$ tt load -t "I did something awesome" -d friday
+$ tt load -t "I did something awesome" -d friday -h 6.5
 Success!
 ```
 
@@ -93,7 +93,7 @@ Start: 28/04/2019, 01/05/2019
 +------------+-----------------------------------------------------------------+
 | 28/05/2019 |              BURNS-4210 I slept all day long                    |
 +------------+-----------------------------------------------------------------+
-| 29/04/2019 |                      BURNS-4283 I miss March                    |
+| 29/04/2019                      BURNS-4283 I missed March                    |
 +------------+-----------------------------------------------------------------+
 | 30/04/2019 |       BURNS-4763 I actually stayed at Moe's Tabern but          |
 +------------+-----------------------------------------------------------------+
