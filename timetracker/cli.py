@@ -41,11 +41,15 @@ def tt():
     is_flag=True,
     help='Is this day paid time off'
 )
-def load(text, config, date, pto, vacations):
+@click.option(
+    '--hours', '-h',
+    help='How long did it take?',
+)
+def load(text, config, date, pto, vacations, hours):
     """
     Load hours
     """
-    load_hours(text, config, date, pto, vacations)
+    load_hours(text, config, date, pto, vacations, hours)
 
 
 @tt.command()
