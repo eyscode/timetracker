@@ -14,11 +14,13 @@ from .constants import (
 )
 from .constants import BASE_URL
 
+requests.packages.urllib3.disable_warnings()
 
 def prepare_session(session):
     """
     Puts in some default headers into a session.
     """
+    session.verify = False
     session.headers.update({
         'Host': 'timetracker.bairesdev.com',
         'Upgrade-Insecure-Requests': '1',
