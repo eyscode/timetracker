@@ -179,7 +179,7 @@ def hours_as_table(content, *, current_month, full, show_weekday):
 
     if full:
         values = ["" for i in range(len(column_headers))]
-        values[column_headers.index("Hours")] = rows[-1].find_all('td')[1].string
+        values[column_headers.index("Hours")] = rows[-1].find_all('td')[1].string if len(rows[-1].find_all('td')) > 1 else 0.0
         table.append_row(values)
     return table
 
