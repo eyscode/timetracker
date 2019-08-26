@@ -1,3 +1,4 @@
+from copy import copy
 from datetime import datetime
 
 import requests
@@ -7,12 +8,11 @@ import click
 import toml
 import re
 import sys
-import maya
 
+from .utils import parse_date
 from .constants import (
-    PROJECT_DROPDOWN, FOCAL_DROPDOWN, ASSIGNMENT_DROPDOWN, LOGIN_CREDENTIALS, LOAD_HOURS_OPTIONS, WEEKDAYS
+    PROJECT_DROPDOWN, FOCAL_DROPDOWN, ASSIGNMENT_DROPDOWN, LOGIN_CREDENTIALS, LOAD_HOURS_OPTIONS, WEEKDAYS, BASE_URL
 )
-from .constants import BASE_URL
 
 requests.packages.urllib3.disable_warnings()
 
@@ -46,7 +46,7 @@ def login(session, credentials):
             res.history
             and res.history[0].status_code == 302
             and res.status_code == 200
-            and res.url == f'{BASE_URL}/ListaTimeTracker.aspx'
+            and res.url == '{}/ListaTimeTracker.aspx'.format(BASE_URL)
     ):
         raise RuntimeError(
             "There was a problem login with your credentials. "
@@ -59,7 +59,7 @@ def load_time_form(session):
     """
     Go to the load time form.
     """
-    load_time_url = f'{BASE_URL}/CargaTimeTracker.aspx'
+    load_time_url = '{}/CargaTimeTracker.aspx'.format(BASE_URL)
     content = session.get(load_time_url).content
     return BeautifulSoup(content, 'html.parser')
 
@@ -75,10 +75,9 @@ def validate_option(form, value, name, _id):
         if opt.text
     }
     if not options_available.get(value):
-        names = ', '.join(f'"{p}"' for p in options_available.keys())
+        names = ', '.join('"{}"'.format(p) for p in options_available.keys())
         raise click.BadParameter(
-            f'{name.capitalize()} "{value}" is not available. '
-            f'Choose from: {names}'
+            '{} "{}" is not available. Choose from: {}'.format(name.capitalize(), value, names)
         )
     return options_available.get(value)
 
@@ -87,7 +86,7 @@ def fetch_hours(session, form, start, end):
     """
     Fetches list of loaded hours
     """
-    list_time_url = f'{BASE_URL}/ListaTimeTracker.aspx'
+    list_time_url = '{}/ListaTimeTracker.aspx'.format(BASE_URL)
     args = {
         '__EVENTTARGET': 'ctl00$ContentPlaceHolder$AplicarFiltroLinkButton',
         '__EVENTARGUMENT': '',
@@ -106,13 +105,13 @@ def set_project(session, form, project_option):
     """
     Sets the project into the session so that assignments and focal points become available.
     """
-    load_time_url = f'{BASE_URL}/CargaTimeTracker.aspx'
+    load_time_url = '{}/CargaTimeTracker.aspx'.format(BASE_URL)
     load_assigments_args = {
         'ctl00$ContentPlaceHolder$ScriptManager': 'ctl00$ContentPlaceHolder$UpdatePanel1|ctl00$ContentPlaceHolder$idProyectoDropDownList',
         '__VIEWSTATE': form.find('input', {'name': '__VIEWSTATE'}).get('value'),
         '__VIEWSTATEGENERATOR': form.find('input', {'name': '__VIEWSTATEGENERATOR'}).get('value'),
         '__EVENTVALIDATION': form.find('input', {'name': '__EVENTVALIDATION'}).get('value'),
-        'ctl00$ContentPlaceHolder$txtFrom': maya.when('today').datetime().strftime("%d/%m/%Y"),
+        'ctl00$ContentPlaceHolder$txtFrom': parse_date('today').strftime(r'%d/%m/%Y'),
         'ctl00$ContentPlaceHolder$idProyectoDropDownList': project_option,
         'ctl00$ContentPlaceHolder$DescripcionTextBox': '',
         'ctl00$ContentPlaceHolder$TiempoTextBox': '',
@@ -147,7 +146,7 @@ def set_project(session, form, project_option):
     return secrets, BeautifulSoup(content, 'html.parser')
 
 
-def hours_as_table(content, *, current_month, full, show_weekday):
+def hours_as_table(content, current_month, full, show_weekday):
     """
     Validates that you can actually use the configured project.
     """
@@ -158,7 +157,7 @@ def hours_as_table(content, *, current_month, full, show_weekday):
         column_headers = ["Date", "Description"]
 
     if show_weekday:
-        column_headers = ["Weekday", *column_headers]
+        column_headers = ["Weekday"] + column_headers
 
     table.column_headers = column_headers
 
@@ -174,7 +173,7 @@ def hours_as_table(content, *, current_month, full, show_weekday):
                 values = [date, cols[4].string]
             if show_weekday:
                 weekday = datetime.strptime(cols[0].string, r'%d/%m/%Y').weekday()
-                values = [WEEKDAYS[weekday], *values]
+                values = [WEEKDAYS[weekday]] + values
             table.append_row(values)
 
     if full:
@@ -185,9 +184,9 @@ def hours_as_table(content, *, current_month, full, show_weekday):
 
 
 def actually_load(session, secrets, options):
-    load_time_url = f'{BASE_URL}/CargaTimeTracker.aspx'
-    load_time_args = {
-        **secrets,
+    load_time_url = '{}/CargaTimeTracker.aspx'.format(BASE_URL)
+    load_time_args = copy(secrets)
+    load_time_args.update({
         'ctl00$ContentPlaceHolder$txtFrom': options['date'],
         'ctl00$ContentPlaceHolder$idProyectoDropDownList': options['project'],
         'ctl00$ContentPlaceHolder$DescripcionTextBox': options['text'],
@@ -195,7 +194,7 @@ def actually_load(session, secrets, options):
         'ctl00$ContentPlaceHolder$idTipoAsignacionDropDownList': options['assignment'],
         'ctl00$ContentPlaceHolder$idFocalPointClientDropDownList': options.get('focal'),
         'ctl00$ContentPlaceHolder$btnAceptar': 'Accept'
-    }
+    })
 
     res = session.post(load_time_url, data=load_time_args)
 
@@ -203,7 +202,7 @@ def actually_load(session, secrets, options):
             res.history
             and res.history[0].status_code == 302
             and res.status_code == 200
-            and res.url == f'{BASE_URL}/ListaTimeTracker.aspx'
+            and res.url == '{}/ListaTimeTracker.aspx'.format(BASE_URL)
     ):
         raise RuntimeError("There was a problem loading your timetracker :(")
 
@@ -248,7 +247,7 @@ def load_hours(text, config, date, pto, vacations, hours):
     try:
         login(session, credentials)
     except RuntimeError as e:
-        click.echo(f'{e}', err=True, color='red')
+        click.echo('{}'.format(e), err=True, color='red')
         sys.exit(1)
 
     load_time_page = load_time_form(session)
@@ -287,7 +286,7 @@ def load_hours(text, config, date, pto, vacations, hours):
         actually_load(session, secrets, data)
         click.echo('success!')
     except RuntimeError as e:
-        click.echo(f'{e}', err=True, color='red')
+        click.echo('{}'.format(e), err=True, color='red')
         sys.exit(1)
 
 
@@ -302,13 +301,10 @@ def show_hours(config, start, end, full, weekday):
     try:
         hour_list = login(session, credentials)
     except RuntimeError as e:
-        click.echo(f'{e}', err=True, color='red')
+        click.echo('{}'.format(e), err=True, color='red')
         sys.exit(1)
 
-    if not start and not end:
-        click.echo("Current month: {}".format(maya.when('today').datetime().strftime("%m/%Y")))
-    else:
-        hour_list = fetch_hours(session, hour_list, start, end)
-        click.echo(f"Start: {start}, End: {end}")
+    hour_list = fetch_hours(session, hour_list, start, end)
+    click.echo("Start: {}, End: {}".format(start, end))
 
     click.echo(hours_as_table(hour_list, current_month=not start and not end, full=full, show_weekday=weekday))
