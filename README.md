@@ -100,3 +100,20 @@ Start: 28/04/2019, 01/05/2019
 | 01/05/2019 |           BURNS-4765 I pressed a button in the board            |
 +------------+-----------------------------------------------------------------+
 ```
+
+## Docker
+
+To run the command using docker build the image
+```
+docker build -t tt .
+```
+and run it
+```
+docker run --rm --name tt tt
+```
+By default the container will run the `show` command. But this can be overriden 
+```
+docker run --rm --name tt load -t "Worked on things"
+```
+
+All the cli options are available
