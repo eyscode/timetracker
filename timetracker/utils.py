@@ -11,6 +11,9 @@ def validate_date(ctx, param, date):
     """
     Click helper to turn text into a date.
     """
+
+    if date is None: return None
+
     parsed_date = parse_date(date)
     if not parsed_date:
         raise click.BadParameter(

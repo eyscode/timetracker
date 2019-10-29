@@ -60,6 +60,11 @@ def load(text, config, date, pto, vacations, hours):
     help='Path to a config file'
 )
 @click.option(
+    '--date', '-d',
+    help='Date',
+    callback=validate_date
+)
+@click.option(
     '--start', '-s',
     help='Starting date',
     default=begin_of_month,
@@ -83,8 +88,13 @@ def load(text, config, date, pto, vacations, hours):
     help='Show week day',
     default=False
 )
-def show(config, start, end, full, weekday):
+def show(config, date, start, end, full, weekday):
     """
     Show loaded hours
     """
+    start = date if date else start
+    end = date if date else end
+    if end and not start:
+        raise click.MissingParameter(
+            f'End date requires a starting date')
     show_hours(config, start, end, full, weekday)
