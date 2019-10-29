@@ -23,7 +23,7 @@ requirements = [
 
 setup(
     name='timetracker-cli',
-    version='1.1.0',
+    version='1.2.0',
     description='A command-line utility to interact with BairesDev Time tracker',
     url='https://github.com/eyscode/timetracker/',
     author='Eysenck Gómez',
