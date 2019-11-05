@@ -5,9 +5,9 @@ RUN mkdir /usr/src/app
 WORKDIR /usr/src/app
 
 COPY . .
-COPY ./config.toml /root/.timetracker/config.toml
-
 RUN pip install timetracker-cli
+
+COPY ./config.toml /root/.timetracker/config.toml
 
 ENTRYPOINT [ "tt" ]
 
