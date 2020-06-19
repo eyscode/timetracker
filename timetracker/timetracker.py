@@ -214,6 +214,20 @@ def check_required(name, available, required):
                 "'{}' missing in '{}' config option".format(value, name))
 
 
+def load_csv_hours(csv_file, config):
+    """
+    Load csv file hours
+    """
+    import csv
+    with open(csv_file, newline='') as csvfile:
+        csv.DictReader(csvfile)
+        reader = csv.DictReader(csvfile, dialect='excel')
+        for row in reader:
+            row['pto'] = row.get('pto', False)
+            row['vacations'] = row.get('vacations', False)
+            load_hours(config=config, **row)
+
+
 def load_hours(text, config, date, pto, vacations, hours):
     config = toml.load(config)
     credentials = config.get('credentials')
