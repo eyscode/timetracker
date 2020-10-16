@@ -1,6 +1,6 @@
 import click
 
-from .timetracker import load_hours, show_hours
+from .timetracker import load_hours, show_hours, load_csv_hours
 from .constants import CONFIG_PATH
 from .utils import validate_date, begin_of_month
 
@@ -98,3 +98,21 @@ def show(config, date, start, end, full, weekday):
         raise click.MissingParameter(
             f'End date requires a starting date')
     show_hours(config, start, end, full, weekday)
+
+
+@tt.command()
+@click.argument(
+    'csv_file',
+    type=click.Path(exists=True, dir_okay=False),
+)
+@click.option(
+    '--config', '-c',
+    default=CONFIG_PATH,
+    type=click.Path(exists=True, dir_okay=False),
+    help='Path to a config file'
+)
+def load_csv(csv_file, config):
+    """
+    Load hours from csv file
+    """
+    load_csv_hours(csv_file, config)
