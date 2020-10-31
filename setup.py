@@ -5,39 +5,39 @@ import sys
 py_version = sys.version_info[:2]
 
 if py_version < (3, 5):
-    raise RuntimeError('timetracker-cli requires Python 3.5 or later')
+    raise RuntimeError("timetracker-cli requires Python 3.5 or later")
 
 from pathlib import Path
 
 home = str(Path.home())
 
 requirements = [
-    'beautifulsoup4==4.7.1',
-    'beautifultable==0.7.0',
-    'click==7.0',
-    'requests==2.22.0',
-    'toml==0.10.0',
-    'dateparser==0.7.1',
-    'tzlocal==1.5.1'
+    "beautifulsoup4>=4.6.0<5",
+    "beautifultable==0.7.0",
+    "click>=6.7<8",
+    "requests>=2.18.4<3",
+    "toml>=0.9.4<1",
+    "dateparser==0.7.1",
+    "tzlocal==1.5.1",
 ]
 
 setup(
-    name='timetracker-cli',
-    version='1.2.0',
-    description='A command-line utility to interact with BairesDev Time tracker',
-    url='https://github.com/eyscode/timetracker/',
-    author='Eysenck Gómez',
-    author_email='eysenck.gomez@gmail.com',
-    packages=find_packages(include=['timetracker']),
+    name="timetracker-cli",
+    version="1.2.0",
+    description="A command-line utility to interact with BairesDev Time tracker",
+    url="https://github.com/eyscode/timetracker/",
+    author="Eysenck Gómez",
+    author_email="eysenck.gomez@gmail.com",
+    packages=find_packages(include=["timetracker"]),
     include_package_data=True,
     install_requires=requirements,
     zip_safe=False,
     entry_points={
-        'console_scripts': [
-            'tt=timetracker.cli:tt',
+        "console_scripts": [
+            "tt=timetracker.cli:tt",
         ],
     },
-    data_files=[(os.path.join(home, '.timetracker'), ['config.toml'])],
+    data_files=[(os.path.join(home, ".timetracker"), ["config.toml"])],
     classifiers=[
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
