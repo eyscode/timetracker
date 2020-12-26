@@ -265,6 +265,7 @@ def load_csv_hours(csvfile, config):
     for row in reader:
         row["pto"] = row.get("pto", False)
         row["vacations"] = row.get("vacations", False)
+        print(row)
         load_hours(config=config, **row)
 
 
