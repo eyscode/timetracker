@@ -103,7 +103,7 @@ def show(config, date, start, end, full, weekday):
 @tt.command()
 @click.argument(
     'csv_file',
-    type=click.Path(exists=True, dir_okay=False),
+    type=click.File(mode="r"),
 )
 @click.option(
     '--config', '-c',
@@ -116,3 +116,6 @@ def load_csv(csv_file, config):
     Load hours from csv file
     """
     load_csv_hours(csv_file, config)
+
+if __name__ == "__main__":
+    tt()

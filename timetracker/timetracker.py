@@ -1,18 +1,19 @@
+import csv
+import re
 from copy import copy
 from datetime import datetime
 
+import click
 import requests
+import sys
+import toml
 from beautifultable import BeautifulTable
 from bs4 import BeautifulSoup
-import click
-import toml
-import re
-import sys
 
-from .utils import parse_date
 from .constants import (
     PROJECT_DROPDOWN, FOCAL_DROPDOWN, ASSIGNMENT_DROPDOWN, LOGIN_CREDENTIALS, LOAD_HOURS_OPTIONS, WEEKDAYS, BASE_URL
 )
+from .utils import parse_date
 
 requests.packages.urllib3.disable_warnings()
 
@@ -218,14 +219,14 @@ def load_csv_hours(csv_file, config):
     """
     Load csv file hours
     """
-    import csv
-    with open(csv_file, newline='') as csvfile:
-        csv.DictReader(csvfile)
-        reader = csv.DictReader(csvfile, dialect='excel')
-        for row in reader:
-            row['pto'] = row.get('pto', False)
-            row['vacations'] = row.get('vacations', False)
-            load_hours(config=config, **row)
+    reader = csv.DictReader(csv_file, dialect='excel')
+    for row in reader:
+        row['pto'] = row.get('pto', False)
+        row['vacations'] = row.get('vacations', False)
+        if 'date' in row:
+            # Allow different date formats to be passed in to csv
+            row['date'] = parse_date(row['date']).strftime(r'%d/%m/%Y')
+        load_hours(config=config, **row)
 
 
 def load_hours(text, config, date, pto, vacations, hours):

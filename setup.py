@@ -14,9 +14,9 @@ home = str(Path.home())
 requirements = [
     'beautifulsoup4==4.7.1',
     'beautifultable==0.7.0',
-    'click==7.0',
+    'click>=5.0,<8',
     'requests==2.22.0',
-    'toml==0.10.0',
+    'toml>=0.10.1,<1',
     'dateparser==0.7.1',
     'tzlocal==1.5.1'
 ]
