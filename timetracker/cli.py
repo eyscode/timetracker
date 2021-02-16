@@ -103,7 +103,7 @@ def show(config, date, start, end, full, weekday):
 @tt.command()
 @click.argument(
     'csv_file',
-    type=click.Path(exists=True, dir_okay=False),
+    type=click.Path(exists=True, dir_okay=False)
 )
 @click.option(
     '--config', '-c',

@@ -11,20 +11,17 @@ from pathlib import Path
 
 home = str(Path.home())
 
-requirements = [
-    'beautifulsoup4==4.7.1',
-    'beautifultable==0.7.0',
-    'click==7.0',
-    'requests==2.22.0',
-    'toml==0.10.0',
-    'dateparser==0.7.1',
-    'tzlocal==1.5.1'
-]
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
+with open("requirements.txt", "r") as fh:
+    requirements = fh.readlines()
 
 setup(
     name='timetracker-cli',
-    version='1.2.0',
+    version='1.3.0',
     description='A command-line utility to interact with BairesDev Time tracker',
+    long_description=long_description,
     url='https://github.com/eyscode/timetracker/',
     author='Eysenck Gómez',
     author_email='eysenck.gomez@gmail.com',
@@ -44,6 +41,8 @@ setup(
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Environment :: Console",
         "Operating System :: OS Independent",
     ],
