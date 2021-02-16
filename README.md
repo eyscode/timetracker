@@ -64,7 +64,7 @@ $ tt load-csv hours_to_load.csv
 Success!
 ```
 
-## Show hours loaded
+## Show loaded hours
 
 ```bash
 tt show [OPTIONS]
