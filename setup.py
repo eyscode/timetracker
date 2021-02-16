@@ -22,6 +22,7 @@ setup(
     version='1.3.0',
     description='A command-line utility to interact with BairesDev Time tracker',
     long_description=long_description,
+    long_description_content_type="text/markdown",
     url='https://github.com/eyscode/timetracker/',
     author='Eysenck Gómez',
     author_email='eysenck.gomez@gmail.com',
