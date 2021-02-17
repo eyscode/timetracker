@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.3.0] - 2021-02-16
+- Add `tt load-csv` utility to load hours from a csv file.
+
 ## [1.2.0] - 2019-10-29
 - Add `-d, --date` option for `tt show` command, in order to check just loaded hours for that date.
 - Disable SSL warnings when timetracker's domain has certificate issues.

@@ -22,14 +22,16 @@ focal = 'Mr. Burns'
 hours = 6
 ```
 
-## Usage
+## Load hours
 
 ```bash
 tt load [OPTIONS]
 ```
 
-```
-tt show [OPTIONS]
+or
+
+```bash
+tt load-csv [OPTIONS] CSV_FILE
 ```
 
 ### Examples
@@ -43,17 +45,32 @@ Success!
 
 * Load hours from 3 days ago
 
-```
+```bash
 $ tt load -t "I did something awesome" -d "3 days ago"
 Success!
 ```
 
 * Load 6.5 hours for last friday
 
-```
+```bash
 $ tt load -t "I did something awesome" -d friday -h 6.5
 Success!
 ```
+
+* Load hours from a csv file
+
+```bash
+$ tt load-csv hours_to_load.csv
+Success!
+```
+
+## Show loaded hours
+
+```bash
+tt show [OPTIONS]
+```
+
+### Examples 
 
 * Show your current month loaded hours
 
