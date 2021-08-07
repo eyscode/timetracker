@@ -155,7 +155,7 @@ def hours_as_table(content, current_month, full, show_weekday):
     if full:
         column_headers = ["Date", "Hours", "Project", "Assigment Type", "Description"]
     else:
-        column_headers = ["Date", "Hours", "Project", "Assigment Type", "Description","Category","Comments"]
+        column_headers = ["Date", "Hours", "Project", "Task Category", "Task", "Description"]
 
     if show_weekday:
         column_headers = ["Weekday"] + column_headers
@@ -171,7 +171,7 @@ def hours_as_table(content, current_month, full, show_weekday):
             if full:
                 values = [date, cols[1].string, cols[2].string, cols[3].string, cols[4].string]
             else:
-                values = [date, cols[4].string]
+                values = [date, cols[1].string, cols[2].string, cols[3].string, cols[4].string, cols[5].string]
             if show_weekday:
                 weekday = datetime.strptime(cols[0].string, r'%d/%m/%Y').weekday()
                 values = [WEEKDAYS[weekday]] + values
