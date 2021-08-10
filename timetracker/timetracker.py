@@ -57,15 +57,6 @@ def login(session, credentials):
     return BeautifulSoup(res.content, 'html.parser')
 
 
-def load_time_form(session):
-    """
-    Go to the load time form.
-    """
-    load_time_url = ADD_TIME_FORM_URL.format(BASE_URL)
-    content = session.get(load_time_url).content
-    return BeautifulSoup(content, 'html.parser')
-
-
 def fetch_hours(session, form, start, end):
     """
     Fetches list of loaded hours
