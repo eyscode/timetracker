@@ -7,12 +7,12 @@ import sys
 import toml
 from beautifultable import BeautifulTable
 from bs4 import BeautifulSoup
-from pages import TimeTrackerPage
+from .pages import TimeTrackerPage
 
-from constants import (
+from .constants import (
     LOGIN_CREDENTIALS, LOAD_HOURS_OPTIONS, WEEKDAYS, BASE_URL,
 )
-from utils import parse_date
+from .utils import parse_date
 
 requests.packages.urllib3.disable_warnings()
 ADD_TIME_FORM_URL = '{}/TimeTrackerAdd.aspx'
