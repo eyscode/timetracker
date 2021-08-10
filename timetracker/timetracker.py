@@ -91,9 +91,9 @@ def hours_as_table(content, current_month, full, show_weekday):
     """
     table = BeautifulTable()
     if full:
-        column_headers = ["Date", "Hours", "Project", "Assigment Type", "Description"]
+        column_headers = ["Date", "Hours", "Project", "Task Category", "Task", "Comments"]
     else:
-        column_headers = ["Date", "Description"]
+        column_headers = ["Date", "Comments"]
 
     if show_weekday:
         column_headers = ["Weekday"] + column_headers
@@ -107,9 +107,9 @@ def hours_as_table(content, current_month, full, show_weekday):
         if cols:
             date = cols[0].string if not current_month else cols[0].string[:2]
             if full:
-                values = [date, cols[1].string, cols[2].string, cols[3].string, cols[4].string]
+                values = [date, cols[1].string, cols[2].string, cols[3].string, cols[4].string, cols[5].string]
             else:
-                values = [date, cols[4].string]
+                values = [date, cols[5].string]
             if show_weekday:
                 weekday = datetime.strptime(cols[0].string, r'%d/%m/%Y').weekday()
                 values = [WEEKDAYS[weekday]] + values
