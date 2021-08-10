@@ -169,7 +169,7 @@ def load_hours(text, config, date, pto, vacations, hours):
         comment=text,
         focal=options['focal']
     )
-    click.echo('success!')
+    click.echo('Success!')
 
 
 def show_hours(config, start, end, full, weekday):
