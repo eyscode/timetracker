@@ -6,7 +6,8 @@ CONFIG_PATH = os.path.join(HOME, '.timetracker/config.toml')
 BASE_URL = 'https://timetracker.bairesdev.com'
 
 PROJECT_DROPDOWN = 'ctl00_ContentPlaceHolder_idProyectoDropDownList'
-ASSIGNMENT_DROPDOWN = 'ctl00_ContentPlaceHolder_idTipoAsignacionDropDownList'
+CATEGORY_DROPDOWN = 'ctl00_ContentPlaceHolder_idCategoriaTareaXCargoLaboralDropDownList'
+DESCRIPTION_DROPDOWN = 'ctl00_ContentPlaceHolder_idTareaXCargoLaboralDownList'
 FOCAL_DROPDOWN = 'ctl00_ContentPlaceHolder_idFocalPointClientDropDownList'
 
 LOGIN_CREDENTIALS = ['username', 'password']

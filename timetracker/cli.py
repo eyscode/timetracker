@@ -45,11 +45,19 @@ def tt():
     '--hours', '-h',
     help='How long did it take?',
 )
-def load(text, config, date, pto, vacations, hours):
+@click.option(
+    '--category',
+    help='What is the task category?',
+)
+@click.option(
+    '--description',
+    help='What is the task description?',
+)
+def load(text, config, date, pto, vacations, hours, category, description):
     """
     Load hours
     """
-    load_hours(text, config, date, pto, vacations, hours)
+    load_hours(text, config, date, pto, vacations, hours, category, description)
 
 
 @tt.command()
