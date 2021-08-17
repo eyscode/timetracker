@@ -246,8 +246,6 @@ def actually_load(session, secrets, options):
         'ctl00$ContentPlaceHolder$btnAceptar': 'Accept'
     })
 
-    click.echo('here')
-
     res = session.post(load_time_url, data=load_time_args)
 
     if not (
@@ -292,10 +290,10 @@ def load_hours(text, config, date, pto, vacations, hours, category, description)
         raise click.BadParameter("You need to specify what you did with --text (-t)")
 
     if category is None:
-        category = config.get('category')
-        
+        category = options.get('category')
+    
     if description is None:
-        description = config.get('description')
+        description = options.get('description')
 
     if hours is None:
         hours = options.get('hours')
