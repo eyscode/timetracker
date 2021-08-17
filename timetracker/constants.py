@@ -11,6 +11,6 @@ DESCRIPTION_DROPDOWN = 'ctl00_ContentPlaceHolder_idTareaXCargoLaboralDownList'
 FOCAL_DROPDOWN = 'ctl00_ContentPlaceHolder_idFocalPointClientDropDownList'
 
 LOGIN_CREDENTIALS = ['username', 'password']
-LOAD_HOURS_OPTIONS = ['project', 'assignment', 'focal']
+LOAD_HOURS_OPTIONS = ['project', 'category', 'description', 'focal']
 
 WEEKDAYS = ['M', 'T', 'W', 'TH', 'F', 'S', 'SU']

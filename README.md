@@ -17,7 +17,8 @@ password = 'do.it.for.her'
 
 [options]
 project = 'Springfield Nuclear Power Plant'
-assignment = 'Nuclear Safety Inspection'
+category = 'Development'
+description = 'Features development'
 focal = 'Mr. Burns'
 hours = 6
 ```

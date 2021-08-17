@@ -302,12 +302,12 @@ def load_hours(text, config, date, pto, vacations, hours, category, description)
         raise click.BadParameter("You need to specify hours amount with --hours (-h) or using hours options in config.toml")
 
     if pto:
-        options['project'] = 'BairesDev - Absence'
-        options['assignment'] = 'National Holiday'
+        options['category'] = 'Absence'
+        options['description'] = 'National Holiday'
         text = text if text is not None else 'PTO'
     if vacations:
-        options['project'] = 'BairesDev - Absence'
-        options['assignment'] = 'Vacations'
+        options['category'] = 'Absence'
+        options['description'] = 'Vacations'
         text = text if text is not None else 'Vacations'
 
     session = requests.Session()
