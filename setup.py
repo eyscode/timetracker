@@ -19,7 +19,7 @@ with open("requirements.txt", "r") as fh:
 
 setup(
     name='timetracker-cli',
-    version='1.3.0',
+    version='1.4.0',
     description='A command-line utility to interact with BairesDev Time tracker',
     long_description=long_description,
     long_description_content_type="text/markdown",
